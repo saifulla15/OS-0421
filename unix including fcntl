@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
+int main() {
+    int fileDescriptor;
+    struct stat fileStat;
+    DIR *directory;
+    struct dirent *dirEntry;
+
+    // Open a file
+    fileDescriptor = open("example.txt", O_RDONLY);
+    if (fileDescriptor == -1) {
+        perror("open");
+        return 1;
+    }
+
+    // Get file information using stat
+    if (stat("example.txt", &fileStat) == -1) {
+        perror("stat");
+        return 1;
+    }
+
+    printf("File Size: %lld bytes\n", (long long)fileStat.st_size);
+    printf("File Permissions: %o\n", fileStat.st_mode & 0777);
+
+    // Set file position using lseek
+    if (lseek(fileDescriptor, 0, SEEK_SET) == -1) {
+        perror("lseek");
+        return 1;
+    }
+
+    // Read and display file content
+    char buffer[1024];
+    ssize_t bytesRead = read(fileDescriptor, buffer, sizeof(buffer));
+    if (bytesRead == -1) {
+        perror("read");
+        return 1;
+    }
+    printf("\nFile Content:\n%s\n", buffer);
+
+    // Open a directory
+    directory = opendir(".");
+    if (directory == NULL) {
+        perror("opendir");
+        return 1;
+    }
+
+    // Read and display directory entries
+    printf("\nDirectory Entries:\n");
+    while ((dirEntry = readdir(directory)) != NULL) {
+        printf("%s\n", dirEntry->d_name);
+    }
+
+    // Close file and directory
+    close(fileDescriptor);
+    closedir(directory);
+
+    return 0;
+}
